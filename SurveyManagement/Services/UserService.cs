@@ -1,4 +1,5 @@
-﻿using SurveyManagement.Models;
+using SurveyManagement.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace SurveyManagement.Services
 {
@@ -13,17 +14,23 @@ namespace SurveyManagement.Services
 
         public IEnumerable<User> GetAll()
         {
-            return _context.Users.ToList();
+            return _context.Users
+                .Include(u => u.Role)
+                .ToList();
         }
 
         public User? GetById(int id)
         {
-            return _context.Users.Find(id);
+            return _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefault(u => u.UserId == id);
         }
 
         public User? GetByEmail(string email)
         {
-            return _context.Users.FirstOrDefault(u => u.Email == email);
+            return _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefault(u => u.Email == email);
         }
 
         public User Add(User user)

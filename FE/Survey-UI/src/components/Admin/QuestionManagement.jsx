@@ -28,6 +28,7 @@ import {
   DownloadOutlined,
   EyeOutlined
 } from '@ant-design/icons';
+import { API_BASE_URL, API_ENDPOINTS, getAuthHeaders } from '../../config/api';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -46,33 +47,36 @@ const QuestionManagement = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      const mockQuestions = [
-        {
-          id: 1,
-          content: 'React Hook nào được sử dụng để quản lý state trong functional component?',
-          type: 'multiple_choice',
-          skill: 'React',
-          difficulty: 'Junior',
-          answers: [
-            { id: 1, content: 'useState', isCorrect: true },
-            { id: 2, content: 'useEffect', isCorrect: false },
-            { id: 3, content: 'useContext', isCorrect: false },
-            { id: 4, content: 'useReducer', isCorrect: false }
-          ]
-        },
-        {
-          id: 2,
-          content: 'Giải thích khái niệm RESTful API và các nguyên tắc cơ bản.',
-          type: 'essay',
-          skill: 'Backend',
-          difficulty: 'Senior',
-          answers: []
-        }
-      ];
-      setQuestions(mockQuestions);
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Không thể tải danh sách câu hỏi');
+      }
+      
+      const data = await response.json();
+      
+      // Chuyển đổi dữ liệu từ API để phù hợp với cấu trúc hiện tại
+      const formattedQuestions = data.map(q => ({
+        id: q.questionId,
+        content: q.content,
+        type: q.type,
+        skill: q.skill,
+        difficulty: q.difficulty,
+        testId: q.testId,
+        answers: q.answers ? q.answers.map(a => ({
+          id: a.answerId,
+          content: a.content,
+          isCorrect: a.isCorrect
+        })) : []
+      }));
+      
+      setQuestions(formattedQuestions);
     } catch (error) {
-      message.error('Lỗi khi tải danh sách câu hỏi');
+      console.error('Error fetching questions:', error);
+      message.error('Lỗi khi tải danh sách câu hỏi: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -95,35 +99,107 @@ const QuestionManagement = () => {
 
   const handleDelete = async (id) => {
     try {
-      // TODO: Replace with actual API call
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Không thể xóa câu hỏi');
+      }
+      
       setQuestions(questions.filter(q => q.id !== id));
       message.success('Xóa câu hỏi thành công');
     } catch (error) {
-      message.error('Lỗi khi xóa câu hỏi');
+      console.error('Error deleting question:', error);
+      message.error('Lỗi khi xóa câu hỏi: ' + error.message);
     }
   };
 
   const handleSubmit = async (values) => {
     try {
+      // Chuyển đổi dữ liệu từ form sang định dạng API
+      const questionData = {
+        content: values.content,
+        type: values.type || '',
+        skill: values.skill || '',
+        difficulty: values.difficulty || '',
+        testId: values.testId || 1, // Mặc định TestId = 1, có thể thay đổi sau
+        answers: values.answers ? values.answers.map(a => ({
+          content: a.content,
+          isCorrect: a.isCorrect === undefined ? false : a.isCorrect
+        })) : []
+      };
+      
+      console.log('Sending data:', JSON.stringify(questionData));
+      
+      let response;
+      let newQuestion;
+      
       if (editingQuestion) {
-        // Update question
+        // Cập nhật câu hỏi
+        response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}/${editingQuestion.id}`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(questionData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Không thể cập nhật câu hỏi');
+        }
+        
+        // Cập nhật state
         setQuestions(questions.map(q => 
-          q.id === editingQuestion.id ? { ...q, ...values } : q
+          q.id === editingQuestion.id ? { 
+            ...q, 
+            ...values,
+            content: values.content,
+            type: values.type,
+            skill: values.skill,
+            difficulty: values.difficulty,
+            answers: values.answers || []
+          } : q
         ));
+        
         message.success('Cập nhật câu hỏi thành công');
       } else {
-        // Add new question
-        const newQuestion = {
-          id: Date.now(),
-          ...values
+        // Thêm câu hỏi mới
+        response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(questionData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Không thể thêm câu hỏi');
+        }
+        
+        // Lấy dữ liệu câu hỏi mới từ response
+        const data = await response.json();
+        
+        // Chuyển đổi dữ liệu từ API để phù hợp với cấu trúc hiện tại
+        newQuestion = {
+          id: data.questionId,
+          content: data.content,
+          type: data.type,
+          skill: data.skill,
+          difficulty: data.difficulty,
+          answers: data.answers ? data.answers.map(a => ({
+            id: a.answerId,
+            content: a.content,
+            isCorrect: a.isCorrect
+          })) : []
         };
+        
         setQuestions([...questions, newQuestion]);
         message.success('Thêm câu hỏi thành công');
       }
+      
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
-      message.error('Lỗi khi lưu câu hỏi');
+      console.error('Error saving question:', error);
+      message.error('Lỗi khi lưu câu hỏi: ' + error.message);
     }
   };
 
@@ -244,10 +320,8 @@ const QuestionManagement = () => {
 
   const uploadProps = {
     name: 'file',
-    action: '/api/questions/import',
-    headers: {
-      authorization: 'authorization-text',
-    },
+    action: `${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}/import`,
+    headers: getAuthHeaders(),
     onChange(info) {
       if (info.file.status === 'done') {
         message.success(`${info.file.name} file uploaded successfully`);

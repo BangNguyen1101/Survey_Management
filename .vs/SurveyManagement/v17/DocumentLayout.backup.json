@@ -3,20 +3,28 @@
   "WorkspaceRootPath": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\services\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\services\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\data\\surveydbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\data\\surveydbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\services\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\services\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -29,10 +37,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\models\\vuserinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\models\\vuserinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|solutionrelative:surveymanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F140E3DE-8EDE-49C5-8EFA-EBE84074404E}|SurveyManagement\\SurveyManagement.csproj|c:\\users\\admin\\desktop\\study\\surveymanagement\\surveymanagement\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
@@ -62,11 +66,24 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 13,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 4,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "SurveyManagement\\Properties\\launchSettings.json",
+              "ToolTip": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Properties\\launchSettings.json",
+              "RelativeToolTip": "SurveyManagement\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-08-20T04:07:26.034Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
               "Title": "VUserInfo.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Models\\VUserInfo.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Models\\VUserInfo.cs",
@@ -78,7 +95,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Controllers\\AuthController.cs",
@@ -90,7 +107,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "Role.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Models\\Role.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Models\\Role.cs",
@@ -102,7 +119,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "SurveyDbContext.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Data\\SurveyDbContext.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Data\\SurveyDbContext.cs",
@@ -110,24 +127,25 @@
               "RelativeToolTip": "SurveyManagement\\Data\\SurveyDbContext.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-19T08:24:00.362Z"
+              "WhenOpened": "2025-08-19T08:24:00.362Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "AuthService.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Services\\AuthService.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Services\\AuthService.cs",
               "ToolTip": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Services\\AuthService.cs",
               "RelativeToolTip": "SurveyManagement\\Services\\AuthService.cs",
-              "ViewState": "AgIAAFgAAAAAAAAAAAAAwDUAAAAkAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADUAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-19T07:53:05.624Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "IAuthService.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Services\\IAuthService.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Services\\IAuthService.cs",
@@ -135,11 +153,12 @@
               "RelativeToolTip": "SurveyManagement\\Services\\IAuthService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-19T07:52:20.423Z"
+              "WhenOpened": "2025-08-19T07:52:20.423Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "LoginRequest.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Models\\LoginRequest.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Models\\LoginRequest.cs",
@@ -151,7 +170,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "UserController.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Controllers\\UserController.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Controllers\\UserController.cs",
@@ -163,7 +182,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "UserService.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Services\\UserService.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Services\\UserService.cs",
@@ -175,7 +194,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "IUserService.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Services\\IUserService.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Services\\IUserService.cs",
@@ -187,7 +206,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\appsettings.json",
               "RelativeDocumentMoniker": "SurveyManagement\\appsettings.json",
@@ -199,7 +218,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "User.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Models\\User.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Models\\User.cs",
@@ -211,15 +230,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Program.cs",
               "RelativeDocumentMoniker": "SurveyManagement\\Program.cs",
               "ToolTip": "C:\\Users\\Admin\\Desktop\\Study\\SurveyManagement\\SurveyManagement\\Program.cs",
               "RelativeToolTip": "SurveyManagement\\Program.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAAwCEAAAAaAAAAAAAAAA==",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAAwA4AAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-19T07:16:04.178Z"
+              "WhenOpened": "2025-08-19T07:16:04.178Z",
+              "EditorCaption": ""
             }
           ]
         }

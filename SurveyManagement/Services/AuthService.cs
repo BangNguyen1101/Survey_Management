@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SurveyManagement.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -150,6 +150,18 @@ namespace SurveyManagement.Services
             using var rng = RandomNumberGenerator.Create();
             rng.GetBytes(randomNumber);
             return Convert.ToBase64String(randomNumber);
+        }
+        
+        public bool ChangePassword(int userId, string currentPassword, string newPassword)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.UserId == userId && u.Password == currentPassword);
+            
+            if (user == null) return false;
+            
+            user.Password = newPassword;
+            _context.SaveChanges();
+            
+            return true;
         }
     }
 }

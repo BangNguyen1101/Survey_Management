@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using SurveyManagement.Models;
@@ -26,7 +26,22 @@ namespace SurveyManagement.Controllers
             if (tokenResponse == null)
                 return Unauthorized(new { message = "Invalid email or password" });
 
-            return Ok(tokenResponse);
+            // Lấy thông tin user để trả về cùng với token
+            var user = _userService.GetByEmail(request.Email);
+            var role = user.Role?.RoleName ?? "User";
+
+            return Ok(new {
+                accessToken = tokenResponse.AccessToken,
+                refreshToken = tokenResponse.RefreshToken,
+                expiresAt = tokenResponse.ExpiresAt,
+                tokenType = tokenResponse.TokenType,
+                user = new {
+                    userId = user.UserId,
+                    fullName = user.FullName,
+                    email = user.Email,
+                    role = role
+                }
+            });
         }
 
         [HttpPost("register")]
@@ -120,6 +135,26 @@ namespace SurveyManagement.Controllers
         public IActionResult ValidateToken()
         {
             return Ok(new { message = "Token is valid" });
+        }
+        
+        [HttpPost("change-password")]
+        [Authorize]
+        public IActionResult ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            // Lấy userId từ token
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+                return Unauthorized(new { message = "Invalid token" });
+            
+            // Kiểm tra mật khẩu mới và xác nhận mật khẩu
+            if (request.NewPassword != request.ConfirmPassword)
+                return BadRequest(new { message = "New password and confirm password do not match" });
+            
+            // Thực hiện đổi mật khẩu
+            var success = _authService.ChangePassword(userId, request.CurrentPassword, request.NewPassword);
+            if (!success)
+                return BadRequest(new { message = "Current password is incorrect" });
+            
+            return Ok(new { message = "Password changed successfully" });
         }
     }
 }

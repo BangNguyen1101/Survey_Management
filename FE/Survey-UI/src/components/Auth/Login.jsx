@@ -66,9 +66,25 @@ const Login = () => {
           }
           if (data.user) {
             localStorage.setItem('user', JSON.stringify(data.user));
+            
+            // Chuyển hướng dựa trên role của người dùng
+            console.log('User data:', data.user); // Debug log chi tiết
+            const userRole = data.user.role?.toLowerCase() || '';
+            console.log('User role:', userRole); // Debug log
+            
+            if (userRole.includes('admin')) {
+              console.log('Redirecting to admin page'); // Debug log
+              navigate('/admin');
+            } else {
+              console.log('Redirecting to employee page'); // Debug log
+              navigate('/employee');
+            }
+          } else {
+            // Nếu không có thông tin user, mặc định chuyển đến trang employee
+            console.log('No user info, redirecting to employee page'); // Debug log
+            navigate('/employee');
           }
           message.success('Đăng nhập thành công!');
-          navigate('/admin');
         } else {
           message.error('Response không hợp lệ từ server!');
         }

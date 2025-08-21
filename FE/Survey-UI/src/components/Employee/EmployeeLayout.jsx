@@ -3,10 +3,9 @@ import { Layout, Menu, Avatar, Dropdown, Space, Badge, Button, message } from 'a
 import {
   DashboardOutlined,
   UserOutlined,
-  TeamOutlined,
   FileTextOutlined,
-  TrophyOutlined,
-  BarChartOutlined,
+  HistoryOutlined,
+  CommentOutlined,
   SettingOutlined,
   LogoutOutlined,
   BellOutlined,
@@ -17,7 +16,7 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
 const { Header, Sider, Content } = Layout;
 
-const AdminLayout = () => {
+const EmployeeLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
@@ -35,42 +34,36 @@ const AdminLayout = () => {
     }
   }, []);
   
-
   const menuItems = [
     {
-      key: '/admin',
+      key: '/employee',
       icon: <DashboardOutlined />,
-      label: 'Dashboard',
+      label: 'Trang chủ',
     },
     {
-      key: '/admin/users',
+      key: '/employee/profile',
       icon: <UserOutlined />,
-      label: 'Quản lý người dùng',
+      label: 'Hồ sơ cá nhân',
     },
     {
-      key: '/admin/departments',
-      icon: <TeamOutlined />,
-      label: 'Quản lý phòng ban',
-    },
-    {
-      key: '/admin/questions',
+      key: '/employee/tests',
       icon: <FileTextOutlined />,
-      label: 'Quản lý câu hỏi',
+      label: 'Bài khảo sát',
     },
     {
-      key: '/admin/tests',
-      icon: <TrophyOutlined />,
-      label: 'Quản lý bài test',
+      key: '/employee/history',
+      icon: <HistoryOutlined />,
+      label: 'Lịch sử khảo sát',
     },
     {
-      key: '/admin/reports',
-      icon: <BarChartOutlined />,
-      label: 'Báo cáo & Thống kê',
+      key: '/employee/feedback',
+      icon: <CommentOutlined />,
+      label: 'Phản hồi & Góp ý',
     },
     {
-      key: '/admin/settings',
+      key: '/employee/settings',
       icon: <SettingOutlined />,
-      label: 'Cài đặt hệ thống',
+      label: 'Cài đặt tài khoản',
     },
   ];
 
@@ -87,11 +80,13 @@ const AdminLayout = () => {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'Hồ sơ cá nhân',
+      onClick: () => navigate('/employee/profile'),
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: 'Cài đặt',
+      label: 'Cài đặt tài khoản',
+      onClick: () => navigate('/employee/settings'),
     },
     {
       type: 'divider',
@@ -169,19 +164,19 @@ const AdminLayout = () => {
               style={{ fontSize: '16px', width: 64, height: 64 }}
             />
             <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1890ff' }}>
-              Admin Panel
+              Trang Nhân Viên
             </span>
           </Space>
           
           <Space size="large">
-            <Badge count={5}>
+            <Badge count={3}>
               <Button type="text" icon={<BellOutlined />} size="large" />
             </Badge>
             
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
-                <span style={{ color: '#333' }}>{user?.fullName || 'Admin User'}</span>
+                <span style={{ color: '#333' }}>{user?.fullName || 'Nhân viên'}</span>
               </Space>
             </Dropdown>
           </Space>
@@ -203,4 +198,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default EmployeeLayout;

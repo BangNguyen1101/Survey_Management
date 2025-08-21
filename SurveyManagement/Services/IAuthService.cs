@@ -1,4 +1,4 @@
-﻿using SurveyManagement.Models;
+using SurveyManagement.Models;
 
 namespace SurveyManagement.Services
 {
@@ -8,5 +8,6 @@ namespace SurveyManagement.Services
         TokenResponse RefreshToken(string refreshToken);
         bool RevokeRefreshToken(string refreshToken);
         bool ValidateRefreshToken(string refreshToken);
+        bool ChangePassword(int userId, string currentPassword, string newPassword);
     }
 }
