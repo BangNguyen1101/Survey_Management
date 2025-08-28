@@ -30,6 +30,7 @@ import {
   CheckCircleOutlined,
   EyeOutlined
 } from '@ant-design/icons';
+import { getApiUrl, getAuthHeaders } from '../../config/api';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -54,41 +55,18 @@ const TestManagement = () => {
   const fetchTests = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      const mockTests = [
-        {
-          id: 1,
-          title: 'Test kỹ năng React',
-          description: 'Bài test đánh giá kiến thức React cơ bản',
-          duration: 60,
-          passingScore: 70,
-          totalQuestions: 20,
-          skill: 'React',
-          difficulty: 'Junior',
-          status: 'active',
-          assignedUsers: 25,
-          completedUsers: 18,
-          startDate: '2024-01-01',
-          endDate: '2024-01-31'
-        },
-        {
-          id: 2,
-          title: 'Test kiến thức Testing',
-          description: 'Bài test về các phương pháp testing',
-          duration: 90,
-          passingScore: 80,
-          totalQuestions: 30,
-          skill: 'Testing',
-          difficulty: 'Middle',
-          status: 'upcoming',
-          assignedUsers: 15,
-          completedUsers: 0,
-          startDate: '2024-02-01',
-          endDate: '2024-02-28'
-        }
-      ];
-      setTests(mockTests);
+      const response = await fetch(getApiUrl('/api/Test'), {
+        headers: getAuthHeaders(),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Không thể tải danh sách tests');
+      }
+      
+      const data = await response.json();
+      setTests(data);
     } catch (error) {
+      console.error('Error fetching tests:', error);
       message.error('Lỗi khi tải danh sách bài test');
     } finally {
       setLoading(false);
@@ -96,19 +74,37 @@ const TestManagement = () => {
   };
 
   const fetchQuestions = async () => {
-    // TODO: Replace with actual API call
-    setQuestions([
-      { id: 1, content: 'React Hook nào được sử dụng để quản lý state?', skill: 'React', difficulty: 'Junior' },
-      { id: 2, content: 'Giải thích khái niệm RESTful API', skill: 'Backend', difficulty: 'Senior' }
-    ]);
+    try {
+      const response = await fetch(getApiUrl('/api/Question'), {
+        headers: getAuthHeaders(),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Không thể tải danh sách câu hỏi');
+      }
+      
+      const data = await response.json();
+      setQuestions(data);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+    }
   };
 
   const fetchUsers = async () => {
-    // TODO: Replace with actual API call
-    setUsers([
-      { id: 1, name: 'Nguyễn Văn A', department: 'IT', level: 'Junior' },
-      { id: 2, name: 'Trần Thị B', department: 'QA', level: 'Middle' }
-    ]);
+    try {
+      const response = await fetch(getApiUrl('/api/User'), {
+        headers: getAuthHeaders(),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Không thể tải danh sách người dùng');
+      }
+      
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
   };
 
   const handleAdd = () => {
@@ -121,44 +117,87 @@ const TestManagement = () => {
   const handleEdit = (record) => {
     setEditingTest(record);
     setCurrentStep(0);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      title: record.title,
+      description: record.description,
+      timeLimit: record.timeLimit,
+      passScore: record.passScore
+    });
     setModalVisible(true);
   };
 
   const handleDelete = async (id) => {
     try {
-      // TODO: Replace with actual API call
-      setTests(tests.filter(test => test.id !== id));
+      const response = await fetch(getApiUrl(`/api/Test/${id}`), {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Không thể xóa bài test');
+      }
+      
+      setTests(tests.filter(test => test.testId !== id));
       message.success('Xóa bài test thành công');
     } catch (error) {
-      message.error('Lỗi khi xóa bài test');
+      console.error('Error deleting test:', error);
+      message.error('Lỗi khi xóa bài test: ' + error.message);
     }
   };
 
   const handleSubmit = async (values) => {
     try {
+      const testData = {
+        title: values.title,
+        description: values.description,
+        timeLimit: values.timeLimit,
+        passScore: values.passScore
+      };
+
+      let response;
+      
       if (editingTest) {
         // Update test
+        response = await fetch(getApiUrl(`/api/Test/${editingTest.testId}`), {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(testData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Không thể cập nhật bài test');
+        }
+        
+        // Update state
         setTests(tests.map(test => 
-          test.id === editingTest.id ? { ...test, ...values } : test
+          test.testId === editingTest.testId ? { ...test, ...testData } : test
         ));
         message.success('Cập nhật bài test thành công');
       } else {
         // Add new test
-        const newTest = {
-          id: Date.now(),
-          ...values,
-          status: 'upcoming',
-          assignedUsers: 0,
-          completedUsers: 0
-        };
+        response = await fetch(getApiUrl('/api/Test'), {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(testData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Không thể thêm bài test');
+        }
+        
+        const newTest = await response.json();
         setTests([...tests, newTest]);
         message.success('Thêm bài test thành công');
       }
+      
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
-      message.error('Lỗi khi lưu bài test');
+      console.error('Error saving test:', error);
+      message.error('Lỗi khi lưu bài test: ' + error.message);
     }
   };
 
@@ -179,48 +218,24 @@ const TestManagement = () => {
       key: 'info',
       render: (_, record) => (
         <Space direction="vertical" size="small">
-          <Space size="small">
-            <Tag color="blue">{record.skill}</Tag>
-            <Tag color={record.difficulty === 'Junior' ? 'green' : record.difficulty === 'Middle' ? 'orange' : 'red'}>
-              {record.difficulty}
-            </Tag>
-          </Space>
           <div style={{ fontSize: '12px' }}>
-            <ClockCircleOutlined /> {record.duration} phút | 
-            <CheckCircleOutlined /> {record.passingScore}% đạt
+            <ClockCircleOutlined /> {record.timeLimit || 'N/A'} phút | 
+            <CheckCircleOutlined /> {record.passScore || 'N/A'}% đạt
           </div>
         </Space>
       ),
     },
     {
-      title: 'Thời gian',
-      key: 'time',
-      render: (_, record) => (
-        <div style={{ fontSize: '12px' }}>
-          <div>Từ: {record.startDate}</div>
-          <div>Đến: {record.endDate}</div>
-        </div>
-      ),
-    },
-    {
-      title: 'Tham gia',
-      key: 'participation',
-      render: (_, record) => (
-        <div style={{ fontSize: '12px' }}>
-          <div>Đã giao: {record.assignedUsers}</div>
-          <div>Hoàn thành: {record.completedUsers}</div>
-        </div>
-      ),
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'orange'}>
-          {status === 'active' ? 'Đang diễn ra' : 'Sắp diễn ra'}
-        </Tag>
-      ),
+      title: 'Số câu hỏi',
+      key: 'questionCount',
+      render: (_, record) => {
+        const questionCount = questions.filter(q => q.testId === record.testId).length;
+        return (
+          <Tag color="blue">
+            {questionCount} câu hỏi
+          </Tag>
+        );
+      },
     },
     {
       title: 'Thao tác',
@@ -243,7 +258,7 @@ const TestManagement = () => {
           </Button>
           <Popconfirm
             title="Bạn có chắc muốn xóa bài test này?"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDelete(record.testId)}
             okText="Có"
             cancelText="Không"
           >
@@ -257,6 +272,7 @@ const TestManagement = () => {
   ];
 
   const handleView = (test) => {
+    const questionCount = questions.filter(q => q.testId === test.testId).length;
     Modal.info({
       title: 'Chi tiết bài test',
       width: 600,
@@ -264,11 +280,9 @@ const TestManagement = () => {
         <div>
           <p><strong>Tên:</strong> {test.title}</p>
           <p><strong>Mô tả:</strong> {test.description}</p>
-          <p><strong>Thời gian:</strong> {test.duration} phút</p>
-          <p><strong>Điểm đạt:</strong> {test.passingScore}%</p>
-          <p><strong>Số câu hỏi:</strong> {test.totalQuestions}</p>
-          <p><strong>Kỹ năng:</strong> {test.skill}</p>
-          <p><strong>Độ khó:</strong> {test.difficulty}</p>
+          <p><strong>Thời gian:</strong> {test.timeLimit || 'N/A'} phút</p>
+          <p><strong>Điểm đạt:</strong> {test.passScore || 'N/A'}%</p>
+          <p><strong>Số câu hỏi:</strong> {questionCount}</p>
         </div>
       ),
     });
@@ -279,32 +293,13 @@ const TestManagement = () => {
       title: 'Thông tin cơ bản',
       content: (
         <div>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="title"
-                label="Tên bài test"
-                rules={[{ required: true, message: 'Vui lòng nhập tên bài test!' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="skill"
-                label="Kỹ năng"
-                rules={[{ required: true, message: 'Vui lòng chọn kỹ năng!' }]}
-              >
-                <Select placeholder="Chọn kỹ năng">
-                  <Option value="React">React</Option>
-                  <Option value="Vue">Vue</Option>
-                  <Option value="Backend">Backend</Option>
-                  <Option value="Testing">Testing</Option>
-                  <Option value="BA">BA</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item
+            name="title"
+            label="Tên bài test"
+            rules={[{ required: true, message: 'Vui lòng nhập tên bài test!' }]}
+          >
+            <Input />
+          </Form.Item>
 
           <Form.Item
             name="description"
@@ -315,31 +310,18 @@ const TestManagement = () => {
           </Form.Item>
 
           <Row gutter={16}>
-            <Col span={8}>
+            <Col span={12}>
               <Form.Item
-                name="difficulty"
-                label="Độ khó"
-                rules={[{ required: true, message: 'Vui lòng chọn độ khó!' }]}
-              >
-                <Select placeholder="Chọn độ khó">
-                  <Option value="Junior">Junior</Option>
-                  <Option value="Middle">Middle</Option>
-                  <Option value="Senior">Senior</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                name="duration"
+                name="timeLimit"
                 label="Thời gian (phút)"
                 rules={[{ required: true, message: 'Vui lòng nhập thời gian!' }]}
               >
                 <InputNumber min={1} max={300} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
-            <Col span={8}>
+            <Col span={12}>
               <Form.Item
-                name="passingScore"
+                name="passScore"
                 label="Điểm đạt (%)"
                 rules={[{ required: true, message: 'Vui lòng nhập điểm đạt!' }]}
               >
@@ -360,7 +342,7 @@ const TestManagement = () => {
           >
             <Transfer
               dataSource={questions.map(q => ({
-                key: q.id,
+                key: q.questionId,
                 title: q.content,
                 description: `${q.skill} - ${q.difficulty}`
               }))}
@@ -381,35 +363,14 @@ const TestManagement = () => {
           >
             <Transfer
               dataSource={users.map(u => ({
-                key: u.id,
-                title: u.name,
-                description: `${u.department} - ${u.level}`
+                key: u.userId,
+                title: u.fullName,
+                description: `${u.departmentId} - ${u.level}`
               }))}
               titles={['Danh sách người dùng', 'Người được giao']}
               render={item => item.title}
             />
           </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="startDate"
-                label="Ngày bắt đầu"
-                rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu!' }]}
-              >
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="endDate"
-                label="Ngày kết thúc"
-                rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc!' }]}
-              >
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
         </div>
       ),
     },
@@ -429,22 +390,22 @@ const TestManagement = () => {
             </Col>
             <Col span={6}>
               <Statistic
-                title="Đang diễn ra"
-                value={tests.filter(t => t.status === 'active').length}
+                title="Tổng số câu hỏi"
+                value={questions.length}
                 valueStyle={{ color: '#3f8600' }}
               />
             </Col>
             <Col span={6}>
               <Statistic
-                title="Sắp diễn ra"
-                value={tests.filter(t => t.status === 'upcoming').length}
+                title="Tổng số người dùng"
+                value={users.length}
                 valueStyle={{ color: '#faad14' }}
               />
             </Col>
             <Col span={6}>
               <Statistic
-                title="Tổng người tham gia"
-                value={tests.reduce((sum, test) => sum + test.assignedUsers, 0)}
+                title="Trung bình câu hỏi/test"
+                value={tests.length > 0 ? Math.round(questions.length / tests.length) : 0}
                 prefix={<UserOutlined />}
               />
             </Col>
@@ -465,7 +426,7 @@ const TestManagement = () => {
           columns={columns}
           dataSource={tests}
           loading={loading}
-          rowKey="id"
+          rowKey="testId"
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,

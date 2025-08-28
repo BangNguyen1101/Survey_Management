@@ -6,6 +6,7 @@ using System.Text;
 using SurveyManagement.Data;
 using SurveyManagement.Models;
 using SurveyManagement.Services;
+using SurveyManagement.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,8 @@ builder.Services.AddDbContext<SurveyDbContext>(options =>
 // Đăng ký service
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+Console.WriteLine("Services registered successfully");
 
 // CORS cho môi trường dev (Swagger/FE local)
 builder.Services.AddCors(options =>
@@ -68,6 +71,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
+// Cấu hình JSON để tránh lỗi vòng tham chiếu
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
 
 // Dùng Swagger (OpenAPI)
 builder.Services.AddEndpointsApiExplorer();
@@ -107,6 +115,37 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Apply migrations and seed database
+try
+{
+    Console.WriteLine("Starting database migration and seeding...");
+    using (var scope = app.Services.CreateScope())
+    {
+        Console.WriteLine("Creating service scope...");
+        var context = scope.ServiceProvider.GetRequiredService<EmployeeSurveyDbContext>();
+        Console.WriteLine("DbContext created successfully");
+        
+        // Apply pending migrations to ensure tables exist
+        Console.WriteLine("Applying database migrations...");
+        context.Database.Migrate();
+        Console.WriteLine("Database migrations applied successfully");
+        
+        Console.WriteLine("Starting SeedDatabase...");
+        SeedData.SeedDatabase(context);
+        Console.WriteLine("Database seeded successfully");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error migrating/seeding database: {ex.Message}");
+    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+    if (ex.InnerException != null)
+    {
+        Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+    }
+    // Không crash app nếu seed data thất bại
+}
+
 app.UseSwagger(c =>
 {
     // Đặt server theo scheme/host hiện tại để tránh lỗi mixed content (http -> https)
@@ -140,8 +179,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Thêm Authentication middleware trước Authorization
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); // Tạm thời comment để test
+app.UseAuthorization(); // Tạm thời comment để test
 
 app.MapControllers();
 

@@ -17,7 +17,8 @@ import {
   Statistic,
   InputNumber,
   Divider,
-  Checkbox
+  Checkbox,
+  Tooltip
 } from 'antd';
 import {
   PlusOutlined,
@@ -82,10 +83,34 @@ const QuestionManagement = () => {
     }
   };
 
+
+
   const handleAdd = () => {
     setEditingQuestion(null);
     form.resetFields();
     setModalVisible(true);
+  };
+
+  // Xử lý khi thay đổi loại câu hỏi
+  const handleQuestionTypeChange = (value) => {
+    console.log('Question type changed to:', value);
+    if (value === 'multiple_choice') {
+      // Tự động tạo 2 đáp án mặc định cho câu hỏi trắc nghiệm
+      const defaultAnswers = [
+        { content: '', isCorrect: false },
+        { content: '', isCorrect: false }
+      ];
+      console.log('Setting default answers:', defaultAnswers);
+      form.setFieldsValue({
+        answers: defaultAnswers
+      });
+    } else {
+      // Xóa đáp án nếu chọn câu hỏi tự luận
+      console.log('Clearing answers for essay question');
+      form.setFieldsValue({
+        answers: []
+      });
+    }
   };
 
   const handleEdit = (record) => {
@@ -118,34 +143,73 @@ const QuestionManagement = () => {
 
   const handleSubmit = async (values) => {
     try {
-      // Chuyển đổi dữ liệu từ form sang định dạng API
-      const questionData = {
-        content: values.content,
-        type: values.type || '',
-        skill: values.skill || '',
-        difficulty: values.difficulty || '',
-        testId: values.testId || 1, // Mặc định TestId = 1, có thể thay đổi sau
-        answers: values.answers ? values.answers.map(a => ({
-          content: a.content,
-          isCorrect: a.isCorrect === undefined ? false : a.isCorrect
-        })) : []
-      };
+      console.log('Form values received:', values);
+      console.log('Answers from form:', values.answers);
       
-      console.log('Sending data:', JSON.stringify(questionData));
+      // Kiểm tra xem có câu hỏi trắc nghiệm có ít nhất 2 đáp án không
+      if (values.type === 'multiple_choice' && (!values.answers || values.answers.length < 2)) {
+        console.log('Validation failed: Not enough answers for multiple choice');
+        message.error('Câu hỏi trắc nghiệm phải có ít nhất 2 đáp án!');
+        return;
+      }
+
+      // Kiểm tra nội dung đáp án không được để trống
+      if (values.type === 'multiple_choice' && values.answers && values.answers.length > 0) {
+        const hasEmptyContent = values.answers.some(answer => !answer.content || answer.content.trim() === '');
+        if (hasEmptyContent) {
+          console.log('Validation failed: Some answers have empty content');
+          message.error('Tất cả đáp án phải có nội dung!');
+          return;
+        }
+      }
+
+      // Kiểm tra xem có đáp án đúng nào không
+      if (values.type === 'multiple_choice' && values.answers && values.answers.length > 0) {
+        const hasCorrectAnswer = values.answers.some(answer => answer.isCorrect);
+        console.log('Has correct answer:', hasCorrectAnswer);
+        if (!hasCorrectAnswer) {
+          console.log('Validation failed: No correct answer selected');
+          message.error('Câu hỏi trắc nghiệm phải có ít nhất 1 đáp án đúng!');
+          return;
+        }
+      }
+
+             // Chuyển đổi dữ liệu từ form sang định dạng API
+       const questionData = {
+         content: values.content,
+         type: values.type || '',
+         skill: values.skill || '',
+         difficulty: values.difficulty || '',
+         // Không gửi testId khi tạo mới, để backend tự động gán
+         answers: values.type === 'essay' ? [] : (values.answers ? values.answers.map(a => ({
+           content: a.content,
+           isCorrect: a.isCorrect === undefined ? false : a.isCorrect
+         })) : [])
+       };
+      
+             console.log('Processed answers:', questionData.answers);
+       console.log('Question type:', values.type);
+       console.log('Answers count:', values.answers ? values.answers.length : 0);
+       console.log('Sending data:', JSON.stringify(questionData));
       
       let response;
       let newQuestion;
       
-      if (editingQuestion) {
-        // Cập nhật câu hỏi
-        response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}/${editingQuestion.id}`, {
-          method: 'PUT',
-          headers: getAuthHeaders(),
-          body: JSON.stringify(questionData)
-        });
+             if (editingQuestion) {
+         // Cập nhật câu hỏi
+         console.log('Updating question with ID:', editingQuestion.id);
+         console.log('Question data being sent:', questionData);
+         
+         response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}/${editingQuestion.id}`, {
+           method: 'PUT',
+           headers: getAuthHeaders(),
+           body: JSON.stringify(questionData)
+         });
         
         if (!response.ok) {
-          throw new Error('Không thể cập nhật câu hỏi');
+          const errorText = await response.text();
+          console.error('Server response:', errorText);
+          throw new Error(`Không thể cập nhật câu hỏi: ${response.status} ${response.statusText}`);
         }
         
         // Cập nhật state
@@ -157,6 +221,7 @@ const QuestionManagement = () => {
             type: values.type,
             skill: values.skill,
             difficulty: values.difficulty,
+            testId: q.testId, // Giữ nguyên testId cũ
             answers: values.answers || []
           } : q
         ));
@@ -170,9 +235,13 @@ const QuestionManagement = () => {
           body: JSON.stringify(questionData)
         });
         
-        if (!response.ok) {
-          throw new Error('Không thể thêm câu hỏi');
-        }
+                 if (!response.ok) {
+           const errorText = await response.text();
+           console.error('Server response:', errorText);
+           console.error('Response status:', response.status);
+           console.error('Response headers:', response.headers);
+           throw new Error(`Không thể thêm câu hỏi: ${response.status} ${response.statusText} - ${errorText}`);
+         }
         
         // Lấy dữ liệu câu hỏi mới từ response
         const data = await response.json();
@@ -184,6 +253,7 @@ const QuestionManagement = () => {
           type: data.type,
           skill: data.skill,
           difficulty: data.difficulty,
+          testId: data.testId,
           answers: data.answers ? data.answers.map(a => ({
             id: a.answerId,
             content: a.content,
@@ -228,10 +298,10 @@ const QuestionManagement = () => {
       dataIndex: 'skill',
       key: 'skill',
       filters: [
-        { text: 'React', value: 'React' },
-        { text: 'Backend', value: 'Backend' },
-        { text: 'Testing', value: 'Testing' },
-        { text: 'BA', value: 'BA' }
+        { text: 'Frontend', value: 'FE' },
+        { text: 'Backend', value: 'BE' },
+        { text: 'BA', value: 'BA' },
+        { text: 'Testing', value: 'Testing' }
       ],
       onFilter: (value, record) => record.skill === value,
     },
@@ -257,66 +327,44 @@ const QuestionManagement = () => {
       ),
     },
     {
+      title: 'Thuộc Test',
+      dataIndex: 'testId',
+      key: 'testId',
+      render: (testId) => {
+        if (!testId || testId === 0) {
+          return <Tag color="orange">Chưa gán</Tag>;
+        }
+        return <Tag color="blue">Test {testId}</Tag>;
+      },
+    },
+    {
       title: 'Thao tác',
       key: 'action',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-          >
-            Xem
-          </Button>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Bạn có chắc muốn xóa câu hỏi này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              Xóa
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+             render: (_, record) => (
+         <Space size="middle">
+           <Button
+             type="link"
+             icon={<EditOutlined />}
+             onClick={() => handleEdit(record)}
+           >
+             Sửa
+           </Button>
+           <Popconfirm
+             title="Bạn có chắc muốn xóa câu hỏi này?"
+             onConfirm={() => handleDelete(record.id)}
+             okText="Có"
+             cancelText="Không"
+           >
+             <Button type="link" danger icon={<DeleteOutlined />}>
+               Xóa
+             </Button>
+           </Popconfirm>
+         </Space>
+       ),
     },
   ];
 
-  const handleView = (question) => {
-    Modal.info({
-      title: 'Chi tiết câu hỏi',
-      width: 600,
-      content: (
-        <div>
-          <p><strong>Nội dung:</strong> {question.content}</p>
-          <p><strong>Kỹ năng:</strong> {question.skill}</p>
-          <p><strong>Độ khó:</strong> {question.difficulty}</p>
-          <p><strong>Loại:</strong> {question.type === 'multiple_choice' ? 'Trắc nghiệm' : 'Tự luận'}</p>
-          {question.answers && question.answers.length > 0 && (
-            <div>
-              <p><strong>Đáp án:</strong></p>
-              <ul>
-                {question.answers.map((answer, index) => (
-                  <li key={answer.id} style={{ color: answer.isCorrect ? 'green' : 'black' }}>
-                    {String.fromCharCode(65 + index)}. {answer.content}
-                    {answer.isCorrect && <Tag color="green">Đúng</Tag>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      ),
-    });
-  };
+
 
   const uploadProps = {
     name: 'file',
@@ -498,15 +546,12 @@ const QuestionManagement = () => {
                 label="Kỹ năng"
                 rules={[{ required: true, message: 'Vui lòng chọn kỹ năng!' }]}
               >
-                <Select placeholder="Chọn kỹ năng">
-                  <Option value="React">React</Option>
-                  <Option value="Vue">Vue</Option>
-                  <Option value="Angular">Angular</Option>
-                  <Option value="Backend">Backend</Option>
-                  <Option value="Testing">Testing</Option>
-                  <Option value="BA">BA</Option>
-                  <Option value="DevOps">DevOps</Option>
-                </Select>
+                                 <Select placeholder="Chọn kỹ năng">
+                   <Option value="FE">Frontend</Option>
+                   <Option value="BE">Backend</Option>
+                   <Option value="BA">BA</Option>
+                   <Option value="Testing">Testing</Option>
+                 </Select>
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -523,57 +568,73 @@ const QuestionManagement = () => {
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item
-                name="type"
-                label="Loại câu hỏi"
-                rules={[{ required: true, message: 'Vui lòng chọn loại câu hỏi!' }]}
-              >
-                <Select placeholder="Chọn loại">
-                  <Option value="multiple_choice">Trắc nghiệm</Option>
-                  <Option value="essay">Tự luận</Option>
-                </Select>
-              </Form.Item>
+                             <Form.Item
+                 name="type"
+                 label="Loại câu hỏi"
+                 rules={[{ required: true, message: 'Vui lòng chọn loại câu hỏi!' }]}
+               >
+                 <Select 
+                   placeholder="Chọn loại"
+                   onChange={handleQuestionTypeChange}
+                 >
+                   <Option value="multiple_choice">Trắc nghiệm</Option>
+                   <Option value="essay">Tự luận</Option>
+                 </Select>
+               </Form.Item>
             </Col>
           </Row>
 
-          <Form.List name="answers">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Row gutter={16} key={key} style={{ marginBottom: '8px' }}>
-                    <Col span={16}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'content']}
-                        rules={[{ required: true, message: 'Vui lòng nhập đáp án!' }]}
-                      >
-                        <Input placeholder="Nhập đáp án" />
-                      </Form.Item>
-                    </Col>
-                    <Col span={6}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'isCorrect']}
-                        valuePropName="checked"
-                      >
-                        <Checkbox>Đáp án đúng</Checkbox>
-                      </Form.Item>
-                    </Col>
-                    <Col span={2}>
-                      <Button type="link" danger onClick={() => remove(name)}>
-                        Xóa
-                      </Button>
-                    </Col>
-                  </Row>
-                ))}
-                <Form.Item>
-                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                    Thêm đáp án
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
+          
+
+                     <Form.List name="answers">
+             {(fields, { add, remove }) => (
+               <>
+                 {fields.map(({ key, name, ...restField }) => (
+                   <Row gutter={16} key={key} style={{ marginBottom: '8px' }}>
+                     <Col span={16}>
+                       <Form.Item
+                         {...restField}
+                         name={[name, 'content']}
+                         rules={[{ required: true, message: 'Vui lòng nhập đáp án!' }]}
+                       >
+                         <Input placeholder={`Nhập đáp án ${String.fromCharCode(65 + name)}`} />
+                       </Form.Item>
+                     </Col>
+                     <Col span={6}>
+                       <Form.Item
+                         {...restField}
+                         name={[name, 'isCorrect']}
+                         valuePropName="checked"
+                       >
+                         <Checkbox>Đáp án đúng</Checkbox>
+                       </Form.Item>
+                     </Col>
+                     <Col span={2}>
+                       <Button 
+                         type="link" 
+                         danger 
+                         onClick={() => remove(name)}
+                         disabled={fields.length <= 2 && form.getFieldValue('type') === 'multiple_choice'}
+                       >
+                         Xóa
+                       </Button>
+                     </Col>
+                   </Row>
+                 ))}
+                 <Form.Item>
+                   <Button 
+                     type="dashed" 
+                     onClick={() => add()} 
+                     block 
+                     icon={<PlusOutlined />}
+                     disabled={form.getFieldValue('type') === 'essay'}
+                   >
+                     Thêm đáp án
+                   </Button>
+                 </Form.Item>
+               </>
+             )}
+           </Form.List>
 
           <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
             <Space>

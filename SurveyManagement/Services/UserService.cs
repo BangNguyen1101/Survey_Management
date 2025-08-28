@@ -14,15 +14,39 @@ namespace SurveyManagement.Services
 
         public IEnumerable<User> GetAll()
         {
-            return _context.Users
-                .Include(u => u.Role)
-                .ToList();
+            try
+            {
+                Console.WriteLine("UserService.GetAll: Starting...");
+                Console.WriteLine($"UserService.GetAll: Context is null: {_context == null}");
+                
+                var users = _context.Users
+                    .Include(u => u.Role)
+                    .Include(u => u.Department)
+                    // Ưu tiên Admin (RoleId == 1) lên đầu, sau đó sort theo UserId
+                    .OrderBy(u => u.RoleId == 1 ? 0 : 1)
+                    .ThenBy(u => u.UserId)
+                    .ToList();
+                
+                Console.WriteLine($"UserService.GetAll: Found {users.Count} users");
+                return users;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"UserService.GetAll Error: {ex.Message}");
+                Console.WriteLine($"UserService.GetAll Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"UserService.GetAll Inner exception: {ex.InnerException.Message}");
+                }
+                throw;
+            }
         }
 
         public User? GetById(int id)
         {
             return _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Department)
                 .FirstOrDefault(u => u.UserId == id);
         }
 
@@ -30,6 +54,7 @@ namespace SurveyManagement.Services
         {
             return _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Department)
                 .FirstOrDefault(u => u.Email == email);
         }
 

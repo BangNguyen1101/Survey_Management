@@ -32,8 +32,14 @@ export const getApiUrl = (endpoint) => {
 // Helper function to get auth headers
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
-  return {
+  
+  const headers = {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
   };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
 };

@@ -30,6 +30,13 @@ namespace SurveyManagement.Controllers
                 .ToListAsync();
         }
 
+        // GET: api/Question/tests
+        [HttpGet("tests")]
+        public async Task<ActionResult<IEnumerable<Test>>> GetAvailableTests()
+        {
+            return await _context.Tests.ToListAsync();
+        }
+
         // GET: api/Question/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Question>> GetQuestion(int id)
@@ -56,6 +63,30 @@ namespace SurveyManagement.Controllers
                 // Log dữ liệu nhận được
                 Console.WriteLine($"Received data: {System.Text.Json.JsonSerializer.Serialize(questionDto)}");
                 
+                // Kiểm tra xem TestId có tồn tại không
+                if (questionDto.TestId > 0)
+                {
+                    var testExists = await _context.Tests.AnyAsync(t => t.TestId == questionDto.TestId);
+                    if (!testExists)
+                    {
+                        return BadRequest(new { message = $"Test với ID {questionDto.TestId} không tồn tại. Vui lòng chọn Test hợp lệ." });
+                    }
+                }
+                else
+                {
+                    // Nếu không có TestId, sử dụng Test đầu tiên có sẵn
+                    var firstTest = await _context.Tests.FirstOrDefaultAsync();
+                    if (firstTest != null)
+                    {
+                        questionDto.TestId = firstTest.TestId;
+                        Console.WriteLine($"Auto-assigned TestId: {questionDto.TestId}");
+                    }
+                    else
+                    {
+                        return BadRequest(new { message = "Không có Test nào trong hệ thống. Vui lòng tạo Test trước khi tạo câu hỏi." });
+                    }
+                }
+                
                 var question = new Question
                 {
                     Content = questionDto.Content,
@@ -65,33 +96,61 @@ namespace SurveyManagement.Controllers
                     TestId = questionDto.TestId
                 };
 
+                Console.WriteLine($"Creating question with TestId: {question.TestId}");
                 _context.Questions.Add(question);
+                
+                // Lưu Question trước
                 await _context.SaveChangesAsync();
+                Console.WriteLine($"Question created with ID: {question.QuestionId}");
 
                 // Thêm các đáp án nếu có
                 if (questionDto.Answers != null && questionDto.Answers.Any())
                 {
-                    foreach (var answerDto in questionDto.Answers)
+                    Console.WriteLine($"Adding {questionDto.Answers.Count} answers");
+                    
+                    // Tạo danh sách Answer objects
+                    var answers = questionDto.Answers.Select(answerDto => new Answer
                     {
-                        var answer = new Answer
-                        {
-                            QuestionId = question.QuestionId,
-                            Content = answerDto.Content,
-                            IsCorrect = answerDto.IsCorrect ?? false
-                        };
+                        QuestionId = question.QuestionId,
+                        Content = answerDto.Content,
+                        IsCorrect = answerDto.IsCorrect ?? false
+                    }).ToList();
 
-                        _context.Answers.Add(answer);
-                    }
+                    // Thêm tất cả Answers vào context
+                    _context.Answers.AddRange(answers);
 
+                    // Lưu Answers
                     await _context.SaveChangesAsync();
+                    Console.WriteLine($"Answers saved successfully. Count: {answers.Count}");
                 }
                 
-                return CreatedAtAction(nameof(GetQuestion), new { id = question.QuestionId }, question);
+                Console.WriteLine("Question and answers saved successfully");
+                
+                // Lấy câu hỏi với đáp án để trả về
+                var result = await _context.Questions
+                    .Include(q => q.Answers)
+                    .FirstOrDefaultAsync(q => q.QuestionId == question.QuestionId);
+                
+                return CreatedAtAction(nameof(GetQuestion), new { id = question.QuestionId }, result);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error creating question: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                // Log chi tiết hơn
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    Console.WriteLine($"Inner exception stack trace: {ex.InnerException.StackTrace}");
+                }
+                
+                // Kiểm tra xem có phải lỗi foreign key constraint không
+                if (ex.InnerException != null && ex.InnerException.Message.Contains("FK__Question__TestId"))
+                {
+                    return BadRequest(new { message = "TestId không hợp lệ. Vui lòng chọn Test có sẵn trong hệ thống." });
+                }
+                
                 return StatusCode(500, new { message = "Lỗi khi tạo câu hỏi: " + ex.Message });
             }
         }
@@ -122,46 +181,43 @@ namespace SurveyManagement.Controllers
 
                 // Xóa các đáp án cũ
                 var existingAnswers = await _context.Answers.Where(a => a.QuestionId == id).ToListAsync();
-                _context.Answers.RemoveRange(existingAnswers);
+                if (existingAnswers.Any())
+                {
+                    _context.Answers.RemoveRange(existingAnswers);
+                    await _context.SaveChangesAsync();
+                }
 
                 // Thêm các đáp án mới
                 if (questionDto.Answers != null && questionDto.Answers.Any())
                 {
-                    foreach (var answerDto in questionDto.Answers)
+                    // Tạo danh sách Answer objects
+                    var answers = questionDto.Answers.Select(answerDto => new Answer
                     {
-                        var answer = new Answer
-                        {
-                            QuestionId = question.QuestionId,
-                            Content = answerDto.Content,
-                            IsCorrect = answerDto.IsCorrect ?? false
-                        };
+                        QuestionId = question.QuestionId,
+                        Content = answerDto.Content,
+                        IsCorrect = answerDto.IsCorrect ?? false
+                    }).ToList();
 
-                        _context.Answers.Add(answer);
-                    }
-                }
-
-                try
-                {
+                    // Thêm tất cả Answers vào context
+                    _context.Answers.AddRange(answers);
+                    
                     await _context.SaveChangesAsync();
+                    Console.WriteLine($"New answers added successfully. Count: {answers.Count}");
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!QuestionExists(id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                
+
+                Console.WriteLine("Question updated successfully");
                 return NoContent();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error updating question: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                
                 return StatusCode(500, new { message = "Lỗi khi cập nhật câu hỏi: " + ex.Message });
             }
         }
@@ -171,20 +227,41 @@ namespace SurveyManagement.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteQuestion(int id)
         {
-            var question = await _context.Questions.FindAsync(id);
-            if (question == null)
+            try
             {
-                return NotFound();
+                var question = await _context.Questions.FindAsync(id);
+                if (question == null)
+                {
+                    return NotFound();
+                }
+
+                // Xóa các đáp án liên quan trước
+                var answers = await _context.Answers.Where(a => a.QuestionId == id).ToListAsync();
+                if (answers.Any())
+                {
+                    _context.Answers.RemoveRange(answers);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Sau đó xóa câu hỏi
+                _context.Questions.Remove(question);
+                await _context.SaveChangesAsync();
+                
+                Console.WriteLine($"Question {id} deleted successfully");
+                return NoContent();
             }
-
-            // Xóa các đáp án liên quan
-            var answers = await _context.Answers.Where(a => a.QuestionId == id).ToListAsync();
-            _context.Answers.RemoveRange(answers);
-
-            _context.Questions.Remove(question);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting question {id}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                
+                return StatusCode(500, new { message = "Lỗi khi xóa câu hỏi: " + ex.Message });
+            }
         }
 
         private bool QuestionExists(int id)

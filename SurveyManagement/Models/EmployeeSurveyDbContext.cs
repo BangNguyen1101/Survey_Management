@@ -40,8 +40,10 @@ public partial class EmployeeSurveyDbContext : DbContext
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=ADMIN\\BANG;Database=EmployeeSurveyDB;User Id=sa;Password=12345;TrustServerCertificate=True;");
+    {
+        // Connection string sẽ được cung cấp từ Program.cs
+        // Không cần hardcode connection string ở đây
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,7 +57,8 @@ public partial class EmployeeSurveyDbContext : DbContext
 
             entity.HasOne(d => d.Question).WithMany(p => p.Answers)
                 .HasForeignKey(d => d.QuestionId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false)
                 .HasConstraintName("FK__Answer__Question__46E78A0C");
         });
 
@@ -115,7 +118,7 @@ public partial class EmployeeSurveyDbContext : DbContext
 
             entity.HasOne(d => d.Test).WithMany(p => p.Questions)
                 .HasForeignKey(d => d.TestId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK__Question__TestId__4316F928");
         });
 

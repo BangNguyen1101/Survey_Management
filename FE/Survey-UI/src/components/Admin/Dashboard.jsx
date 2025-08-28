@@ -10,7 +10,8 @@ const AdminDashboard = () => {
     totalQuestions: 0,
     totalTests: 0
   });
-  const [recentTests, setRecentTests] = useState([]);
+  // Commented out unused state until needed
+  // const [recentTests, setRecentTests] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {

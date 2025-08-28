@@ -14,7 +14,9 @@ import {
   Upload,
   Row,
   Col,
-  Statistic
+  Statistic,
+  Tooltip,
+  Switch
 } from 'antd';
 import {
   PlusOutlined,
@@ -22,8 +24,12 @@ import {
   DeleteOutlined,
   UserOutlined,
   UploadOutlined,
-  DownloadOutlined
+  DownloadOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
+import { getApiUrl, getAuthHeaders } from '../../config/api';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const { Option } = Select;
 
@@ -45,29 +51,20 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      const mockUsers = [
-        {
-          id: 1,
-          fullName: 'Nguyễn Văn A',
-          email: 'nguyenvana@company.com',
-          role: 'Admin',
-          department: 'IT',
-          level: 'Senior',
-          status: 'active'
+      const response = await fetch(getApiUrl('/api/User'), {
+        headers: {
+          'Content-Type': 'application/json'
         },
-        {
-          id: 2,
-          fullName: 'Trần Thị B',
-          email: 'tranthib@company.com',
-          role: 'HR',
-          department: 'HR',
-          level: 'Middle',
-          status: 'active'
-        }
-      ];
-      setUsers(mockUsers);
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      } else {
+        message.error('Lỗi khi tải danh sách người dùng');
+      }
     } catch (error) {
+      console.error('Error fetching users:', error);
       message.error('Lỗi khi tải danh sách người dùng');
     } finally {
       setLoading(false);
@@ -75,82 +72,205 @@ const UserManagement = () => {
   };
 
   const fetchDepartments = async () => {
-    // TODO: Replace with actual API call
-    setDepartments([
-      { id: 1, name: 'IT' },
-      { id: 2, name: 'HR' },
-      { id: 3, name: 'Marketing' },
-      { id: 4, name: 'Sales' }
-    ]);
+    try {
+      const response = await fetch(getApiUrl('/api/Department'), {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDepartments(data);
+      }
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    }
   };
 
   const fetchRoles = async () => {
-    // TODO: Replace with actual API call
-    setRoles([
-      { id: 1, name: 'Admin' },
-      { id: 2, name: 'HR' },
-      { id: 3, name: 'Quản lý' },
-      { id: 4, name: 'Nhân viên' }
-    ]);
+    try {
+      // Giả sử có API endpoint cho roles, nếu không thì dùng hardcode
+      setRoles([
+        // { roleId: 1, roleName: 'Admin' }, // Ẩn khỏi danh sách chọn
+        { roleId: 2, roleName: 'User' },
+        { roleId: 3, roleName: 'HR' },
+        { roleId: 4, roleName: 'Manager' }
+      ]);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
   };
 
   const handleAdd = () => {
     setEditingUser(null);
     form.resetFields();
+    // Mặc định vai trò User khi thêm mới
+    form.setFieldsValue({ roleId: 2 });
     setModalVisible(true);
   };
 
   const handleEdit = (record) => {
     setEditingUser(record);
-    form.setFieldsValue(record);
+    // Map dữ liệu từ backend sang form
+    const formData = {
+      fullName: record.fullName,
+      email: record.email,
+      roleId: record.roleId,
+      departmentId: record.departmentId,
+      level: record.level,
+      password: '' // Không hiển thị password cũ
+    };
+    form.setFieldsValue(formData);
     setModalVisible(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (userId) => {
     try {
-      // TODO: Replace with actual API call
-      setUsers(users.filter(user => user.id !== id));
-      message.success('Xóa người dùng thành công');
+      const response = await fetch(getApiUrl(`/api/User/${userId}`), {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      
+      if (response.ok) {
+        message.success('Xóa người dùng thành công');
+        fetchUsers(); // Reload danh sách
+      } else {
+        message.error('Lỗi khi xóa người dùng');
+      }
     } catch (error) {
+      console.error('Error deleting user:', error);
       message.error('Lỗi khi xóa người dùng');
     }
   };
 
   const handleSubmit = async (values) => {
     try {
+      const userData = {
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password || undefined, // Chỉ gửi password nếu có
+        roleId: values.roleId,
+        level: values.level,
+        departmentId: values.departmentId
+      };
+
+      let response;
       if (editingUser) {
-        // Update user
-        setUsers(users.map(user => 
-          user.id === editingUser.id ? { ...user, ...values } : user
-        ));
-        message.success('Cập nhật người dùng thành công');
+        // Update user - chỉ gửi password nếu có thay đổi
+        if (!userData.password) {
+          delete userData.password;
+        }
+        response = await fetch(getApiUrl(`/api/User/${editingUser.userId}`), {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(userData),
+        });
       } else {
         // Add new user
-        const newUser = {
-          id: Date.now(),
-          ...values,
-          status: 'active'
-        };
-        setUsers([...users, newUser]);
-        message.success('Thêm người dùng thành công');
+        response = await fetch(getApiUrl('/api/User'), {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(userData),
+        });
       }
-      setModalVisible(false);
-      form.resetFields();
+      
+      if (response.ok) {
+        message.success(editingUser ? 'Cập nhật người dùng thành công' : 'Thêm người dùng thành công');
+        setModalVisible(false);
+        form.resetFields();
+        fetchUsers(); // Reload danh sách
+      } else {
+        let msg = 'Lỗi khi lưu người dùng';
+        // Đọc body một lần rồi thử parse JSON
+        const raw = await response.text();
+        try {
+          const errorData = raw ? JSON.parse(raw) : null;
+          if (errorData) msg = errorData.message || errorData.error || msg;
+          else if (raw) msg = `${msg}: ${raw}`;
+        } catch {
+          if (raw) msg = `${msg}: ${raw}`;
+        }
+        message.error(`${msg} (HTTP ${response.status})`);
+      }
     } catch (error) {
+      console.error('Error saving user:', error);
       message.error('Lỗi khi lưu người dùng');
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      // Chuẩn bị dữ liệu để export
+      const exportData = users.map(user => {
+        const role = roles.find(r => r.roleId === user.roleId);
+        const dept = departments.find(d => d.departmentId === user.departmentId);
+        
+        return {
+          'ID': user.userId,
+          'Họ tên': user.fullName,
+          'Email': user.email,
+          'Vai trò': role ? role.roleName : 'Unknown',
+          'Phòng ban': dept ? dept.departmentName : 'N/A',
+          'Level': user.level || 'N/A',
+          'Ngày tạo': user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A'
+        };
+      });
+
+      // Tạo workbook và worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Danh sách người dùng');
+
+      // Điều chỉnh độ rộng cột
+      const colWidths = [
+        { wch: 8 },   // ID
+        { wch: 25 },  // Họ tên
+        { wch: 30 },  // Email
+        { wch: 15 },  // Vai trò
+        { wch: 20 },  // Phòng ban
+        { wch: 12 },  // Level
+        { wch: 15 }   // Ngày tạo
+      ];
+      ws['!cols'] = colWidths;
+
+      // Tạo file Excel
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      // Tạo tên file với timestamp
+      const fileName = `Danh_sach_nguoi_dung_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      // Download file
+      saveAs(data, fileName);
+      
+      message.success('Xuất Excel thành công!');
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      message.error('Lỗi khi xuất Excel');
     }
   };
 
   const columns = [
     {
-      title: 'Họ tên',
-      dataIndex: 'fullName',
-      key: 'fullName',
-      render: (text, record) => (
+      title: 'ID',
+      dataIndex: 'userId',
+      key: 'userId',
+      width: 80,
+      sorter: (a, b) => a.userId - b.userId,
+      render: (text) => (
         <Space>
           <UserOutlined />
           {text}
         </Space>
+      ),
+    },
+    {
+      title: 'Họ tên',
+      dataIndex: 'fullName',
+      key: 'fullName',
+      render: (text) => (
+        <div style={{ fontWeight: 'bold' }}>{text}</div>
       ),
     },
     {
@@ -160,88 +280,84 @@ const UserManagement = () => {
     },
     {
       title: 'Vai trò',
-      dataIndex: 'role',
-      key: 'role',
-      render: (role) => {
+      dataIndex: 'roleId',
+      key: 'roleId',
+      render: (roleId) => {
+        const role = roles.find(r => r.roleId === roleId);
+        const roleName = role ? role.roleName : 'Unknown';
+        
         const colors = {
           'Admin': 'red',
           'HR': 'blue',
-          'Quản lý': 'green',
-          'Nhân viên': 'default'
+          'Manager': 'green',
+          'User': 'default'
         };
-        return <Tag color={colors[role]}>{role}</Tag>;
+        return <Tag color={colors[roleName]}>{roleName}</Tag>;
       },
     },
     {
       title: 'Phòng ban',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'departmentId',
+      key: 'departmentId',
+      render: (departmentId) => {
+        const dept = departments.find(d => d.departmentId === departmentId);
+        return dept ? dept.departmentName : 'N/A';
+      },
     },
     {
       title: 'Level',
       dataIndex: 'level',
       key: 'level',
       render: (level) => {
+        if (!level) return 'N/A';
         const colors = {
-          'Junior': 'orange',
-          'Middle': 'blue',
-          'Senior': 'green'
+          'senior': 'green',
+          'middle': 'blue',
+          'fresher': 'orange'
         };
-        return <Tag color={colors[level]}>{level}</Tag>;
+        return <Tag color={colors[level.toLowerCase()]}>{level}</Tag>;
       },
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
-        </Tag>
-      ),
     },
     {
       title: 'Thao tác',
       key: 'action',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Bạn có chắc muốn xóa người dùng này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              Xóa
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_, record) => {
+        // Ẩn thao tác Sửa/Xóa cho tài khoản Admin (roleId === 1)
+        if (record.roleId === 1) {
+          return null;
+        }
+        return (
+          <Space size="middle">
+            <Tooltip title="Sửa người dùng">
+              <Button
+                type="link"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+              >
+                Sửa
+              </Button>
+            </Tooltip>
+            <Tooltip title="Xóa người dùng">
+              <Popconfirm
+                title="Bạn có chắc muốn xóa người dùng này?"
+                description="Hành động này không thể hoàn tác"
+                onConfirm={() => handleDelete(record.userId)}
+                okText="Có"
+                cancelText="Không"
+                okType="danger"
+              >
+                <Button type="link" danger icon={<DeleteOutlined />}>
+                  Xóa
+                </Button>
+              </Popconfirm>
+            </Tooltip>
+          </Space>
+        );
+      },
     },
   ];
 
-  const uploadProps = {
-    name: 'file',
-    action: '/api/users/import',
-    headers: {
-      authorization: 'authorization-text',
-    },
-    onChange(info) {
-      if (info.file.status === 'done') {
-        message.success(`${info.file.name} file uploaded successfully`);
-        fetchUsers();
-      } else if (info.file.status === 'error') {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-  };
+  
 
   return (
     <div style={{ padding: '24px' }}>
@@ -258,21 +374,21 @@ const UserManagement = () => {
             <Col span={6}>
               <Statistic
                 title="Admin"
-                value={users.filter(u => u.role === 'Admin').length}
+                value={users.filter(u => u.roleId === 1).length}
                 valueStyle={{ color: '#cf1322' }}
               />
             </Col>
             <Col span={6}>
               <Statistic
-                title="HR"
-                value={users.filter(u => u.role === 'HR').length}
+                title="Senior"
+                value={users.filter(u => u.level && u.level.toLowerCase() === 'senior').length}
                 valueStyle={{ color: '#3f8600' }}
               />
             </Col>
             <Col span={6}>
               <Statistic
-                title="Nhân viên"
-                value={users.filter(u => u.role === 'Nhân viên').length}
+                title="Middle/Fresher"
+                value={users.filter(u => u.level && (u.level.toLowerCase() === 'middle' || u.level.toLowerCase() === 'fresher')).length}
                 valueStyle={{ color: '#1890ff' }}
               />
             </Col>
@@ -288,10 +404,16 @@ const UserManagement = () => {
             >
               Thêm người dùng
             </Button>
-            <Upload {...uploadProps}>
-              <Button icon={<UploadOutlined />}>Import Excel</Button>
-            </Upload>
-            <Button icon={<DownloadOutlined />}>Export Excel</Button>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={fetchUsers}
+            >
+              Làm mới
+            </Button>
+            
+            <Button icon={<DownloadOutlined />} onClick={handleExportExcel}>
+              Export Excel
+            </Button>
           </Space>
         </div>
 
@@ -299,13 +421,17 @@ const UserManagement = () => {
           columns={columns}
           dataSource={users}
           loading={loading}
-          rowKey="id"
+          rowKey="userId"
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} của ${total} người dùng`,
+            pageSize: 10,
+            pageSizeOptions: ['10', '20', '50'],
           }}
+          defaultSortOrder="ascend"
+          sortDirections={["ascend", "descend"]}
         />
       </Card>
 
@@ -315,6 +441,7 @@ const UserManagement = () => {
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={600}
+        destroyOnClose
       >
         <Form
           form={form}
@@ -328,7 +455,7 @@ const UserManagement = () => {
                 label="Họ tên"
                 rules={[{ required: true, message: 'Vui lòng nhập họ tên!' }]}
               >
-                <Input />
+                <Input placeholder="Nhập họ tên đầy đủ" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -340,7 +467,7 @@ const UserManagement = () => {
                   { type: 'email', message: 'Email không hợp lệ!' }
                 ]}
               >
-                <Input />
+                <Input placeholder="example@company.com" />
               </Form.Item>
             </Col>
           </Row>
@@ -348,26 +475,29 @@ const UserManagement = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="role"
+                name="roleId"
                 label="Vai trò"
                 rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
               >
                 <Select placeholder="Chọn vai trò">
-                  {roles.map(role => (
-                    <Option key={role.id} value={role.name}>{role.name}</Option>
-                  ))}
+                  {roles
+                    // Đảm bảo không hiển thị Admin nếu có trong danh sách
+                    .filter(r => r.roleId !== 1)
+                    .map(role => (
+                      <Option key={role.roleId} value={role.roleId}>{role.roleName}</Option>
+                    ))}
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name="department"
+                name="departmentId"
                 label="Phòng ban"
                 rules={[{ required: true, message: 'Vui lòng chọn phòng ban!' }]}
               >
                 <Select placeholder="Chọn phòng ban">
                   {departments.map(dept => (
-                    <Option key={dept.id} value={dept.name}>{dept.name}</Option>
+                    <Option key={dept.departmentId} value={dept.departmentId}>{dept.departmentName}</Option>
                   ))}
                 </Select>
               </Form.Item>
@@ -382,23 +512,24 @@ const UserManagement = () => {
                 rules={[{ required: true, message: 'Vui lòng chọn level!' }]}
               >
                 <Select placeholder="Chọn level">
-                  <Option value="Junior">Junior</Option>
-                  <Option value="Middle">Middle</Option>
-                  <Option value="Senior">Senior</Option>
+                  <Option value="fresher">Fresher</Option>
+                  <Option value="middle">Middle</Option>
+                  <Option value="senior">Senior</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                name="password"
-                label="Mật khẩu"
-                rules={[
-                  { required: !editingUser, message: 'Vui lòng nhập mật khẩu!' },
-                  { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
-                ]}
-              >
-                <Input.Password />
-              </Form.Item>
+                              <Form.Item
+                  name="password"
+                  label="Mật khẩu"
+                  rules={[
+                    { required: !editingUser, message: 'Vui lòng nhập mật khẩu!' },
+                    { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
+                  ]}
+                  extra={editingUser ? "Để trống nếu không muốn thay đổi mật khẩu" : ""}
+                >
+                  <Input.Password placeholder={editingUser ? "Để trống nếu không đổi" : "Nhập mật khẩu"} />
+                </Form.Item>
             </Col>
           </Row>
 
